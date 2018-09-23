@@ -61,6 +61,10 @@ namespace BackEnd
             app.UseSwaggerUI(options =>
                 options.SwaggerEndpoint("/swagger/v1/swagger.json", "Conference Planner API v1")
             );
+            
+            // Comment out the following line to avoid resetting the database each time
+            var loader = new DevIntersectionLoader(app.ApplicationServices);
+            loader.LoadData("DevIntersection_Vegas_2017.json", "DevIntersection Vegas 2017");
         }
     }
 }
