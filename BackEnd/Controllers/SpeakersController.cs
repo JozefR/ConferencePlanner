@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BackEnd.Data;
+using BackEnd.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Models;
@@ -12,18 +13,24 @@ namespace BackEnd.Controllers
     [ApiController]
     public class SpeakersController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _db;
 
-        public SpeakersController(ApplicationDbContext context)
+        public SpeakersController(ApplicationDbContext db)
         {
-            _context = context;
+            _db = db;
         }
 
         // GET: api/Speakers
         [HttpGet]
-        public IEnumerable<Speaker> GetSpeakers()
+        public async Task<IActionResult> GetSpeakers()
         {
-            return _context.Speakers;
+            var speakers = await _db.Speakers.AsNoTracking()
+                .Include(s => s.SessionSpeakers)
+                .ThenInclude(ss => ss.Session)
+                .ToListAsync();
+
+            var result = speakers.Select(s => s.MapSpeakerResponse());
+            return Ok(result);
         }
 
         // GET: api/Speakers/5
@@ -35,7 +42,7 @@ namespace BackEnd.Controllers
                 return BadRequest(ModelState);
             }
 
-            var speaker = await _context.Speakers.FindAsync(id);
+            var speaker = await _db.Speakers.FindAsync(id);
 
             if (speaker == null)
             {
@@ -59,11 +66,11 @@ namespace BackEnd.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(speaker).State = EntityState.Modified;
+            _db.Entry(speaker).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -89,8 +96,8 @@ namespace BackEnd.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Speakers.Add(speaker);
-            await _context.SaveChangesAsync();
+            _db.Speakers.Add(speaker);
+            await _db.SaveChangesAsync();
 
             return CreatedAtAction("GetSpeaker", new { id = speaker.ID }, speaker);
         }
@@ -104,21 +111,21 @@ namespace BackEnd.Controllers
                 return BadRequest(ModelState);
             }
 
-            var speaker = await _context.Speakers.FindAsync(id);
+            var speaker = await _db.Speakers.FindAsync(id);
             if (speaker == null)
             {
                 return NotFound();
             }
 
-            _context.Speakers.Remove(speaker);
-            await _context.SaveChangesAsync();
+            _db.Speakers.Remove(speaker);
+            await _db.SaveChangesAsync();
 
             return Ok(speaker);
         }
 
         private bool SpeakerExists(int id)
         {
-            return _context.Speakers.Any(e => e.ID == id);
+            return _db.Speakers.Any(e => e.ID == id);
         }
     }
 }
