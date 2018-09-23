@@ -34,93 +34,88 @@ namespace BackEnd.Controllers
         }
 
         // GET: api/Speakers/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetSpeaker([FromRoute] int id)
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetSpeaker([FromRoute]int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var speaker = await _db.Speakers.FindAsync(id);
-
+            var speaker = await _db.Speakers.AsNoTracking()
+                .Include(s => s.SessionSpeakers)
+                .ThenInclude(ss => ss.Session)
+                .SingleOrDefaultAsync(s => s.ID == id);
+            
             if (speaker == null)
             {
                 return NotFound();
             }
-
-            return Ok(speaker);
+            var result = speaker.MapSpeakerResponse();
+            return Ok(result);
         }
 
-        // PUT: api/Speakers/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSpeaker([FromRoute] int id, [FromBody] Speaker speaker)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != speaker.ID)
-            {
-                return BadRequest();
-            }
-
-            _db.Entry(speaker).State = EntityState.Modified;
-
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SpeakerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Speakers
         [HttpPost]
-        public async Task<IActionResult> PostSpeaker([FromBody] Speaker speaker)
+        public async Task<IActionResult> CreateSpeaker([FromBody]ConferenceDTO.Speaker input)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+
+            var speaker = new Speaker
+            {
+                Name = input.Name,
+                WebSite = input.WebSite,
+                Bio = input.Bio
+            };
 
             _db.Speakers.Add(speaker);
             await _db.SaveChangesAsync();
 
-            return CreatedAtAction("GetSpeaker", new { id = speaker.ID }, speaker);
+            var result = speaker.MapSpeakerResponse();
+
+            return CreatedAtAction(nameof(GetSpeaker), new { id = speaker.ID }, result);
         }
 
-        // DELETE: api/Speakers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSpeaker([FromRoute] int id)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateSpeaker([FromRoute]int id, [FromBody]ConferenceDTO.Speaker input)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            var speaker = await _db.FindAsync<Speaker>(id);
 
-            var speaker = await _db.Speakers.FindAsync(id);
             if (speaker == null)
             {
                 return NotFound();
             }
 
-            _db.Speakers.Remove(speaker);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            speaker.Name = input.Name;
+            speaker.WebSite = input.WebSite;
+            speaker.Bio = input.Bio;
+
+            // TODO: Handle exceptions, e.g. concurrency
             await _db.SaveChangesAsync();
 
-            return Ok(speaker);
+            var result = speaker.MapSpeakerResponse();
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteSpeaker([FromRoute]int id)
+        {
+            var speaker = await _db.FindAsync<Speaker>(id);
+
+            if (speaker == null)
+            {
+                return NotFound();
+            }
+
+            _db.Remove(speaker);
+
+            // TODO: Handle exceptions, e.g. concurrency
+            await _db.SaveChangesAsync();
+
+            return NoContent();
         }
 
         private bool SpeakerExists(int id)
