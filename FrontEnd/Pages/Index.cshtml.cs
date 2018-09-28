@@ -11,7 +11,6 @@ namespace FrontEnd.Pages
     {
         public void OnGet()
         {
-
         }
     }
 }
