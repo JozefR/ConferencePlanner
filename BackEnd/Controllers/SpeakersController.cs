@@ -5,7 +5,6 @@ using BackEnd.Data;
 using BackEnd.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Models;
 
 namespace BackEnd.Controllers
 {
