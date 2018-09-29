@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace FrontEnd.Infrastructure
 {
-    public static     class HttpClientExtensions
+    public static class HttpClientExtensions
     {
         private static readonly JsonSerializer _jsonSerializer = new JsonSerializer();
 
