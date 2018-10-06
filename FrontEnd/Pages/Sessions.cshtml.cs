@@ -20,7 +20,7 @@ namespace FrontEnd.Pages
 
         public SessionResponse Session { get; set; }
 
-        public int? Dayoffset { get; set; }
+        public int? DayOffset { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
@@ -35,7 +35,7 @@ namespace FrontEnd.Pages
 
             var startDate = allSessions.Min(s => s.StartTime?.Date);
 
-            Dayoffset = Session.StartTime?.Subtract(startDate ?? DateTimeOffset.MinValue).Days;
+            DayOffset = Session.StartTime?.Subtract(startDate ?? DateTimeOffset.MinValue).Days;
 
             if (!string.IsNullOrEmpty(Session.Abstract))
             {
