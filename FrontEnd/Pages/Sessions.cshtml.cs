@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using ConferenceDTO;
 using FrontEnd.Services;
@@ -12,10 +13,12 @@ namespace FrontEnd.Pages
     public class SessionModel : PageModel
     {
         private readonly IApiClient _apiClient;
+        private readonly HtmlEncoder _htmlEncoder;
 
-        public SessionModel(IApiClient apiClient)
+        public SessionModel(IApiClient apiClient, HtmlEncoder htmlEncoder)
         {
             _apiClient = apiClient;
+            _htmlEncoder = htmlEncoder;
         }
 
         public SessionResponse Session { get; set; }
@@ -39,7 +42,9 @@ namespace FrontEnd.Pages
 
             if (!string.IsNullOrEmpty(Session.Abstract))
             {
-                Session.Abstract = "<p>" + String.Join("</p><p>", Session.Abstract.Split("\r\n", StringSplitOptions.RemoveEmptyEntries)) + "</p>";
+                var encodedCrlf = _htmlEncoder.Encode("\r\n");
+                var encodedAbstract = _htmlEncoder.Encode(Session.Abstract);
+                Session.Abstract = "<p>" + String.Join("</p><p>", encodedAbstract.Split(encodedCrlf, StringSplitOptions.RemoveEmptyEntries)) + "</p>";
             }
 
             return Page();
