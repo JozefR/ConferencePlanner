@@ -20,9 +20,16 @@ namespace FrontEnd.Pages
 
         public SpeakerResponse Speaker { get; set; }
         
-        public void OnGet()
+        public async Task<IActionResult> OnGet(int id)
         {
-            
+            Speaker = await _apiClient.GetSpeakerAsync(id);
+
+            if (Speaker == null)
+            {
+                return NotFound();
+            }
+
+            return Page();
         }
     }
 }
