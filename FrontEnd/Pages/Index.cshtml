@@ -27,7 +27,7 @@
                         <div class="panel-body">
                             <p>@session.Track?.Name</p>
                             <h3 class="panel-title">
-                                <a asp-page="Session" asp-route-id="@session.ID">@session.Title</a>
+                                <a asp-page="Sessions" asp-route-id="@session.ID">@session.Title</a>
                             </h3>
                             <p>
                             @foreach (var speaker in session.Speakers)
